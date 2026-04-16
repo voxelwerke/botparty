@@ -98,12 +98,18 @@ class Agent {
             
             statusMessage = "Model loaded, starting session..."
             
-            let session = ChatSession(model, instructions: systemPrompt)
+            let instructions = self.systemPrompt + "\n"
+            print(instructions)
+            
+            let session = ChatSession(model, instructions: instructions)
             
             // Step 4: Run AI tasks
-            statusMessage = "The system booted, begin"
+            statusMessage = "Getting first AI response..."
+            print("DEBUG: About to get first AI response")
             var command = try await session.respond(to: "The system booted, begin")
+            print("DEBUG: Got command: \(command)")
             responses.append("AI: \(command)")
+            statusMessage = "Running commands..."
 
             while (self.isRunning && command != "DONE") {
                 statusMessage = "Running \(command)"

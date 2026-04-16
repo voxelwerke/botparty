@@ -52,7 +52,10 @@ class Agent {
             // Step 1: Create and start MicroVM
             statusMessage = "Starting MicroVM..."
             
-            let vm = MicroVM(memory: 256, diskSize: 1024, cpus: 1)
+            guard let kernelPath = Bundle.main.path(forResource: "vmlinux", ofType: nil) else {
+                throw NSError(domain: "Agent", code: 1, userInfo: [NSLocalizedDescriptionKey: "vmlinux kernel file not found"])
+            }
+            let vm = MicroVM(memory: 256, diskSize: 1024, cpus: 1, kernelPath: kernelPath)
             vm.onStatusUpdate = { [weak self] status in
                 self?.statusMessage = status
                 self?.responses.append(status)

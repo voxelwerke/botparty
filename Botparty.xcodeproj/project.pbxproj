@@ -12,11 +12,21 @@
 		B50D8CC62F9070E900C84285 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC52F9070E900C84285 /* MLXLMCommon */; };
 		B50D8CC82F9070E900C84285 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC72F9070E900C84285 /* MLXVLM */; };
 		B50D8CCD2F907D2E00C84285 /* MicroVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50D8CCC2F907D2E00C84285 /* MicroVM.swift */; };
+		B57213C42F9090A600FBB20B /* Containerization in Frameworks */ = {isa = PBXBuildFile; productRef = B57213C32F9090A600FBB20B /* Containerization */; };
+		B57213C62F9090A600FBB20B /* ContainerizationArchive in Frameworks */ = {isa = PBXBuildFile; productRef = B57213C52F9090A600FBB20B /* ContainerizationArchive */; };
+		B57213C82F9090A600FBB20B /* ContainerizationEXT4 in Frameworks */ = {isa = PBXBuildFile; productRef = B57213C72F9090A600FBB20B /* ContainerizationEXT4 */; };
+		B57213CA2F9090A600FBB20B /* ContainerizationExtras in Frameworks */ = {isa = PBXBuildFile; productRef = B57213C92F9090A600FBB20B /* ContainerizationExtras */; };
+		B57213CC2F9090A600FBB20B /* ContainerizationIO in Frameworks */ = {isa = PBXBuildFile; productRef = B57213CB2F9090A600FBB20B /* ContainerizationIO */; };
+		B57213CE2F9090A600FBB20B /* ContainerizationNetlink in Frameworks */ = {isa = PBXBuildFile; productRef = B57213CD2F9090A600FBB20B /* ContainerizationNetlink */; };
+		B57213D02F9090A600FBB20B /* ContainerizationOCI in Frameworks */ = {isa = PBXBuildFile; productRef = B57213CF2F9090A600FBB20B /* ContainerizationOCI */; };
+		B57213D22F9090A600FBB20B /* ContainerizationOS in Frameworks */ = {isa = PBXBuildFile; productRef = B57213D12F9090A600FBB20B /* ContainerizationOS */; };
+		B57213D42F90917200FBB20B /* vmlinux in Resources */ = {isa = PBXBuildFile; fileRef = B57213D32F90917200FBB20B /* vmlinux */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B50D8CAE2F9070B700C84285 /* Botparty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Botparty.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B50D8CCC2F907D2E00C84285 /* MicroVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroVM.swift; sourceTree = "<group>"; };
+		B57213D32F90917200FBB20B /* vmlinux */ = {isa = PBXFileReference; lastKnownFileType = file; path = vmlinux; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -32,10 +42,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B57213C62F9090A600FBB20B /* ContainerizationArchive in Frameworks */,
+				B57213D22F9090A600FBB20B /* ContainerizationOS in Frameworks */,
 				B50D8CC82F9070E900C84285 /* MLXVLM in Frameworks */,
+				B57213CC2F9090A600FBB20B /* ContainerizationIO in Frameworks */,
+				B57213C42F9090A600FBB20B /* Containerization in Frameworks */,
 				B50D8CC42F9070E900C84285 /* MLXLLM in Frameworks */,
+				B57213D02F9090A600FBB20B /* ContainerizationOCI in Frameworks */,
+				B57213CE2F9090A600FBB20B /* ContainerizationNetlink in Frameworks */,
 				B50D8CC02F9070E900C84285 /* MLXEmbedders in Frameworks */,
 				B50D8CC62F9070E900C84285 /* MLXLMCommon in Frameworks */,
+				B57213CA2F9090A600FBB20B /* ContainerizationExtras in Frameworks */,
+				B57213C82F9090A600FBB20B /* ContainerizationEXT4 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -49,6 +67,7 @@
 				B50D8CCB2F9071E100C84285 /* Frameworks */,
 				B50D8CAF2F9070B700C84285 /* Products */,
 				B50D8CCC2F907D2E00C84285 /* MicroVM.swift */,
+				B57213D32F90917200FBB20B /* vmlinux */,
 			);
 			sourceTree = "<group>";
 		};
@@ -91,6 +110,14 @@
 				B50D8CC32F9070E900C84285 /* MLXLLM */,
 				B50D8CC52F9070E900C84285 /* MLXLMCommon */,
 				B50D8CC72F9070E900C84285 /* MLXVLM */,
+				B57213C32F9090A600FBB20B /* Containerization */,
+				B57213C52F9090A600FBB20B /* ContainerizationArchive */,
+				B57213C72F9090A600FBB20B /* ContainerizationEXT4 */,
+				B57213C92F9090A600FBB20B /* ContainerizationExtras */,
+				B57213CB2F9090A600FBB20B /* ContainerizationIO */,
+				B57213CD2F9090A600FBB20B /* ContainerizationNetlink */,
+				B57213CF2F9090A600FBB20B /* ContainerizationOCI */,
+				B57213D12F9090A600FBB20B /* ContainerizationOS */,
 			);
 			productName = Botparty;
 			productReference = B50D8CAE2F9070B700C84285 /* Botparty.app */;
@@ -122,6 +149,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
+				B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B50D8CAF2F9070B700C84285 /* Products */;
@@ -138,6 +166,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B57213D42F90917200FBB20B /* vmlinux in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,7 +187,6 @@
 		B50D8CB92F9070B800C84285 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "Botparty/Botparty.entitlements";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -189,6 +217,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = Botparty/Botparty.entitlements;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 6B3NFCN2Z4;
@@ -223,7 +252,6 @@
 		B50D8CBA2F9070B800C84285 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "Botparty/Botparty.entitlements";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -254,6 +282,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = Botparty/Botparty.entitlements;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 6B3NFCN2Z4;
@@ -280,9 +309,9 @@
 		B50D8CBC2F9070B800C84285 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "Botparty/Botparty.entitlements";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Botparty/Botparty.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -323,9 +352,9 @@
 		B50D8CBD2F9070B800C84285 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "Botparty/Botparty.entitlements";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Botparty/Botparty.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -395,6 +424,14 @@
 				minimumVersion = 2.31.3;
 			};
 		};
+		B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/containerization";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.30.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -417,6 +454,46 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
 			productName = MLXVLM;
+		};
+		B57213C32F9090A600FBB20B /* Containerization */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = Containerization;
+		};
+		B57213C52F9090A600FBB20B /* ContainerizationArchive */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = ContainerizationArchive;
+		};
+		B57213C72F9090A600FBB20B /* ContainerizationEXT4 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = ContainerizationEXT4;
+		};
+		B57213C92F9090A600FBB20B /* ContainerizationExtras */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = ContainerizationExtras;
+		};
+		B57213CB2F9090A600FBB20B /* ContainerizationIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = ContainerizationIO;
+		};
+		B57213CD2F9090A600FBB20B /* ContainerizationNetlink */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = ContainerizationNetlink;
+		};
+		B57213CF2F9090A600FBB20B /* ContainerizationOCI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = ContainerizationOCI;
+		};
+		B57213D12F9090A600FBB20B /* ContainerizationOS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57213C22F9090A600FBB20B /* XCRemoteSwiftPackageReference "containerization" */;
+			productName = ContainerizationOS;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

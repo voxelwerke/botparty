@@ -67,11 +67,19 @@ class Agent {
             
             // Step 2: Test VM with a simple command
             statusMessage = "Testing VM..."
-            
+
+            try vm.send("PS1=\"#> \"")
+            await vm.flush()
+
             try vm.send("echo 'Hello from MicroVM'")
+            try await vm.expect("#> ")
+            print("result \(vm.before)")
+
+            // Sendline is send + expect
             try vm.send("uname -a")
-            // try await vm.wait(pattern: "# ")
-            // let output1 = vm.readOutput()
+            try await vm.expect("#> ")
+            print("result \(vm.before)")
+            
             // responses.append("VM Output: \(output1)")
             
             // Step 3: Load model

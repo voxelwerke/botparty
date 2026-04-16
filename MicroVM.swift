@@ -67,8 +67,14 @@ class MicroVM {
     private let kernelPath: String
     
     var onStatusUpdate: (@Sendable (String) -> Void)?
-    var onOutput: (@Sendable (String) -> Void)?
     
+    // Pexpect State
+    private(set) var before: String = ""
+    private(set) var after: String = ""
+    private var buffer: String = ""
+    private var bufferUpdateStream: AsyncStream<Void>?
+    private var bufferUpdateContinuation: AsyncStream<Void>.Continuation?
+
     init(memory: Int = 1024, diskSize: Int = 2048, cpus: Int = 2, kernelPath: String) {
         self.memory = UInt64(memory)
         self.diskSize = UInt64(diskSize)
@@ -78,6 +84,11 @@ class MicroVM {
     
     func start() async throws {
         guard !isRunning else { return }
+        
+        // Set up buffer update stream
+        let (stream, continuation) = AsyncStream.makeStream(of: Void.self)
+        self.bufferUpdateStream = stream
+        self.bufferUpdateContinuation = continuation
         
         onStatusUpdate?("Initializing container manager...")
         
@@ -105,20 +116,18 @@ class MicroVM {
         let inputReader = InputReader()
         self.inputReader = inputReader
         
-        // Capture output handler in a local variable
-        let outputHandler = self.onOutput
-        
-        let stdoutWriter = OutputWriter { data in
-            if let output = String(data: data, encoding: .utf8) {
-                print(output)
-                outputHandler?(output)
-            }
+        let stdoutWriter = OutputWriter { [weak self] data in
+            guard let self = self, let output = String(data: data, encoding: .utf8) else { return }
+            // print(output) // Keep your debug print
+            
+            // Append to internal buffer and notify any waiting expect calls
+            self.buffer += output
+            self.bufferUpdateContinuation?.yield(())
         }
-        
+
         let stderrWriter = OutputWriter { data in
             if let output = String(data: data, encoding: .utf8) {
                 print(output)
-                outputHandler?("ERROR: \(output)")
             }
         }
         
@@ -134,10 +143,10 @@ class MicroVM {
             config.memoryInBytes = self.memory * 1024 * 1024
             config.process.arguments = ["/bin/sh"]
             config.process.workingDirectory = "/"
-            config.process.terminal = false
+            config.process.terminal = true
             config.process.stdin = inputReader
             config.process.stdout = stdoutWriter
-            config.process.stderr = stderrWriter
+            // config.process.stderr = stderrWriter
         }
         
         guard let container = container else {
@@ -165,7 +174,54 @@ class MicroVM {
         inputReader.send(data)
     }
     
+    func flush() async {
+        // Sleep for 500ms
+        try? await Task.sleep(nanoseconds: 500_000_000)
 
+        // Discard everything currently stored
+        self.before = ""
+        self.after = ""
+        self.buffer = ""
+        
+        // Sleep for 50ms
+        try? await Task.sleep(nanoseconds: 50_000_000)
+    }
+    
+    /// Logic for pexpect: waits until the buffer contains the pattern
+    func expect(_ pattern: String, timeout: TimeInterval = 10.0) async throws {
+        let startTime = Date()
+        
+        // Check if pattern is already in buffer
+        if let range = buffer.range(of: pattern) {
+            before = String(buffer[..<range.lowerBound])
+            after = String(buffer[range])
+            buffer = String(buffer[range.upperBound...])
+            return
+        }
+        
+        guard let stream = bufferUpdateStream else {
+            throw MicroVMError.notRunning
+        }
+        
+        // Wait for buffer updates
+        for await _ in stream {
+            // Check if pattern is now in buffer
+            if let range = buffer.range(of: pattern) {
+                before = String(buffer[..<range.lowerBound])
+                after = String(buffer[range])
+                buffer = String(buffer[range.upperBound...])
+                return
+            }
+            
+            // Check timeout
+            if Date().timeIntervalSince(startTime) > timeout {
+                throw MicroVMError.timeout
+            }
+        }
+        
+        // Stream ended without finding pattern
+        throw MicroVMError.notRunning
+    }
     
     func shutdown() {
         guard isRunning else { return }
@@ -179,6 +235,11 @@ class MicroVM {
                 // Clean up input reader
                 inputReader?.close()
                 inputReader = nil
+                
+                // Clean up buffer update stream
+                bufferUpdateContinuation?.finish()
+                bufferUpdateContinuation = nil
+                bufferUpdateStream = nil
                 
                 isRunning = false
                 onStatusUpdate?("Container stopped")

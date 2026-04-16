@@ -6,6 +6,7 @@
       "size" : "16x16"
     },
     {
+      "filename" : "botparty 8.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"
@@ -21,11 +22,13 @@
       "size" : "32x32"
     },
     {
+      "filename" : "botparty 5.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
     },
     {
+      "filename" : "botparty 4.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
@@ -36,6 +39,7 @@
       "size" : "256x256"
     },
     {
+      "filename" : "botparty 2.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
@@ -46,6 +50,7 @@
       "size" : "512x512"
     },
     {
+      "filename" : "bp-3.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

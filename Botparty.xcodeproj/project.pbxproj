@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B50D8CC02F9070E900C84285 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CBF2F9070E900C84285 /* MLXEmbedders */; };
+		B50D8CC42F9070E900C84285 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC32F9070E900C84285 /* MLXLLM */; };
+		B50D8CC62F9070E900C84285 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC52F9070E900C84285 /* MLXLMCommon */; };
+		B50D8CC82F9070E900C84285 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC72F9070E900C84285 /* MLXVLM */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		B50D8CAE2F9070B700C84285 /* Botparty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Botparty.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +30,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B50D8CC82F9070E900C84285 /* MLXVLM in Frameworks */,
+				B50D8CC42F9070E900C84285 /* MLXLLM in Frameworks */,
+				B50D8CC02F9070E900C84285 /* MLXEmbedders in Frameworks */,
+				B50D8CC62F9070E900C84285 /* MLXLMCommon in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +44,7 @@
 			isa = PBXGroup;
 			children = (
 				B50D8CB02F9070B700C84285 /* Botparty */,
+				B50D8CCB2F9071E100C84285 /* Frameworks */,
 				B50D8CAF2F9070B700C84285 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +55,13 @@
 				B50D8CAE2F9070B700C84285 /* Botparty.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B50D8CCB2F9071E100C84285 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +84,10 @@
 			);
 			name = Botparty;
 			packageProductDependencies = (
+				B50D8CBF2F9070E900C84285 /* MLXEmbedders */,
+				B50D8CC32F9070E900C84285 /* MLXLLM */,
+				B50D8CC52F9070E900C84285 /* MLXLMCommon */,
+				B50D8CC72F9070E900C84285 /* MLXVLM */,
 			);
 			productName = Botparty;
 			productReference = B50D8CAE2F9070B700C84285 /* Botparty.app */;
@@ -94,6 +117,9 @@
 			);
 			mainGroup = B50D8CA52F9070B700C84285;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B50D8CAF2F9070B700C84285 /* Products */;
 			projectDirPath = "";
@@ -256,7 +282,17 @@
 				DEVELOPMENT_TEAM = 6B3NFCN2Z4;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -288,7 +324,17 @@
 				DEVELOPMENT_TEAM = 6B3NFCN2Z4;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -331,6 +377,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm/";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 2.31.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B50D8CBF2F9070E900C84285 /* MLXEmbedders */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXEmbedders;
+		};
+		B50D8CC32F9070E900C84285 /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLLM;
+		};
+		B50D8CC52F9070E900C84285 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLMCommon;
+		};
+		B50D8CC72F9070E900C84285 /* MLXVLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B50D8CBE2F9070E900C84285 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXVLM;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B50D8CA62F9070B700C84285 /* Project object */;
 }

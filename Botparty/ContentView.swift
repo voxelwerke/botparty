@@ -12,77 +12,43 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Agent.createdAt, order: .reverse) private var agents: [Agent]
     @State private var selectedAgent: Agent?
-
+    @State private var showInspector: Bool = true
+    
     var body: some View {
-        VStack(spacing: 0) {
-            // Agents list
-            List {
+        NavigationSplitView {
+            // Sidebar - Agents List
+            List(selection: $selectedAgent) {
                 ForEach(agents) { agent in
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(agent.name)
-                                .font(.headline)
-                            Text(agent.statusMessage)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            
-                            if agent.isRunning && agent.loadingProgress > 0 {
-                                ProgressView(value: agent.loadingProgress, total: 1.0)
-                                    .progressViewStyle(.linear)
-                            }
-                            
-                            // Display responses
-                            if !agent.responses.isEmpty {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    ForEach(agent.responses.indices, id: \.self) { index in
-                                        Text(agent.responses[index])
-                                            .font(.caption)
-                                            .padding(.vertical, 2)
-                                    }
-                                }
-                                .padding(.top, 4)
+                    AgentSidebarRow(agent: agent)
+                        .tag(agent)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                deleteAgent(agent)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
                         }
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 12) {
-                            Button(action: {
-                                Task {
-                                    await agent.play()
-                                }
-                            }) {
-                                Image(systemName: "play.fill")
-                                    .foregroundStyle(agent.isRunning ? .secondary : .primary)
-                            }
-                            .disabled(agent.isRunning)
-                            
-                            Button(action: {
-                                agent.pause()
-                            }) {
-                                Image(systemName: "pause.fill")
-                                    .foregroundStyle(agent.isRunning ? .primary : .secondary)
-                            }
-                            .disabled(!agent.isRunning)
-                        }
+                }
+            }
+            .navigationTitle("Agents")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: createNewAgent) {
+                        Label("Add Agent", systemImage: "plus")
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            
-            // Create new agent button
-            Button(action: {
-                let newAgent = Agent()
-                modelContext.insert(newAgent)
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Create New Agent")
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
+        } detail: {
+            // Detail View - Chat Area
+            if let agent = selectedAgent {
+                AgentDetailView(agent: agent, showInspector: $showInspector)
+            } else {
+                ContentUnavailableView(
+                    "No Agent Selected",
+                    systemImage: "robot",
+                    description: Text("Select an agent from the sidebar or create a new one")
+                )
             }
-            .background(.ultraThinMaterial)
         }
         .background(
             LinearGradient(
@@ -93,7 +59,184 @@ struct ContentView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+            .ignoresSafeArea()
         )
+    }
+    
+    private func createNewAgent() {
+        let newAgent = Agent()
+        modelContext.insert(newAgent)
+        selectedAgent = newAgent
+    }
+    
+    private func deleteAgent(_ agent: Agent) {
+        if selectedAgent == agent {
+            selectedAgent = nil
+        }
+        modelContext.delete(agent)
+    }
+}
+
+// Sidebar Row Component
+struct AgentSidebarRow: View {
+    @Bindable var agent: Agent
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(agent.name)
+                .font(.headline)
+            
+            HStack {
+                Text(agent.statusMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                if agent.isRunning {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+            
+            if agent.isRunning && agent.loadingProgress > 0 {
+                ProgressView(value: agent.loadingProgress, total: 1.0)
+                    .progressViewStyle(.linear)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// Detail View Component
+struct AgentDetailView: View {
+    @Bindable var agent: Agent
+    @Binding var showInspector: Bool
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Messages area
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(agent.responses.indices, id: \.self) { index in
+                        MessageBubble(text: agent.responses[index])
+                    }
+                }
+                .padding()
+            }
+            
+            Divider()
+            
+            // Control bar
+            HStack(spacing: 16) {
+                HStack(spacing: 12) {
+                    Button(action: {
+                        Task {
+                            await agent.play()
+                        }
+                    }) {
+                        Label("Play", systemImage: "play.fill")
+                            .labelStyle(.iconOnly)
+                    }
+                    .disabled(agent.isRunning)
+                    
+                    Button(action: {
+                        agent.pause()
+                    }) {
+                        Label("Pause", systemImage: "pause.fill")
+                            .labelStyle(.iconOnly)
+                    }
+                    .disabled(!agent.isRunning)
+                }
+                
+                Spacer()
+                
+                if agent.isRunning && agent.loadingProgress > 0 {
+                    Text("\(Int(agent.loadingProgress * 100))%")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Text(agent.statusMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+        }
+        .navigationTitle(agent.name)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { showInspector.toggle() }) {
+                    Label("Toggle Inspector", systemImage: "sidebar.right")
+                }
+            }
+        }
+        .inspector(isPresented: $showInspector) {
+            // Inspector - Log/Reasoning
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Log & Reasoning")
+                    .font(.headline)
+                    .padding(.bottom, 4)
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        LogEntry(title: "Status", content: agent.statusMessage)
+                        
+                        if agent.isRunning {
+                            LogEntry(title: "Running", content: "Agent is currently executing")
+                        }
+                        
+                        if agent.loadingProgress > 0 {
+                            LogEntry(title: "Progress", content: "\(Int(agent.loadingProgress * 100))%")
+                        }
+                        
+                        LogEntry(title: "Created", content: agent.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        
+                        if !agent.responses.isEmpty {
+                            LogEntry(title: "Response Count", content: "\(agent.responses.count)")
+                        }
+                    }
+                }
+            }
+            .padding()
+            .inspectorColumnWidth(min: 200, ideal: 250, max: 400)
+        }
+    }
+}
+
+// Message Bubble Component
+struct MessageBubble: View {
+    let text: String
+    
+    var body: some View {
+        Text(text)
+            .padding(12)
+            .background(.regularMaterial)
+            .cornerRadius(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// Log Entry Component
+struct LogEntry: View {
+    let title: String
+    let content: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(content)
+                .font(.system(.caption, design: .monospaced))
+                .textSelection(.enabled)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.quaternary.opacity(0.3))
+        .cornerRadius(6)
     }
 }
 

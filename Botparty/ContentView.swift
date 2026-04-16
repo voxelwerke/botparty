@@ -15,7 +15,7 @@ struct ContentView: View {
     @State private var showInspector: Bool = true
     
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: .constant(.all)) {
             // Sidebar - Agents List
             List(selection: $selectedAgent) {
                 ForEach(agents) { agent in
@@ -31,12 +31,17 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Agents")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: createNewAgent) {
-                        Label("Add Agent", systemImage: "plus")
+            .safeAreaInset(edge: .bottom) {
+                Button(action: createNewAgent) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("New Agent")
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding()
                 }
+                .buttonStyle(.plain)
+                .background(.ultraThinMaterial)
             }
         } detail: {
             // Detail View - Chat Area
@@ -50,17 +55,7 @@ struct ContentView: View {
                 )
             }
         }
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 0xCB / 255, green: 0x43 / 255, blue: 0xF6 / 255),
-                    Color(red: 0xEC / 255, green: 0x4C / 255, blue: 0xBD / 255)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        )
+        .navigationSplitViewStyle(.balanced)
     }
     
     private func createNewAgent() {
@@ -83,8 +78,26 @@ struct AgentSidebarRow: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(agent.name)
-                .font(.headline)
+            HStack {
+                Text(agent.name)
+                    .font(.headline)
+                
+                Spacer()
+                
+                Button(action: {
+                    if agent.isRunning {
+                        agent.pause()
+                    } else {
+                        Task {
+                            await agent.play()
+                        }
+                    }
+                }) {
+                    Image(systemName: agent.isRunning ? "pause.fill" : "play.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
             
             HStack {
                 Text(agent.statusMessage)
@@ -128,27 +141,11 @@ struct AgentDetailView: View {
             
             Divider()
             
-            // Control bar
+            // Status bar
             HStack(spacing: 16) {
-                HStack(spacing: 12) {
-                    Button(action: {
-                        Task {
-                            await agent.play()
-                        }
-                    }) {
-                        Label("Play", systemImage: "play.fill")
-                            .labelStyle(.iconOnly)
-                    }
-                    .disabled(agent.isRunning)
-                    
-                    Button(action: {
-                        agent.pause()
-                    }) {
-                        Label("Pause", systemImage: "pause.fill")
-                            .labelStyle(.iconOnly)
-                    }
-                    .disabled(!agent.isRunning)
-                }
+                Text(agent.statusMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 
                 Spacer()
                 
@@ -157,10 +154,6 @@ struct AgentDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                
-                Text(agent.statusMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
             .padding()
             .background(.ultraThinMaterial)

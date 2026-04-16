@@ -118,7 +118,7 @@ class MicroVM {
         
         let stdoutWriter = OutputWriter { [weak self] data in
             guard let self = self, let output = String(data: data, encoding: .utf8) else { return }
-            // print(output) // Keep your debug print
+            print("OUTPUT: \(output.debugDescription)")
             
             // Append to internal buffer and notify any waiting expect calls
             self.buffer += output
@@ -172,6 +172,14 @@ class MicroVM {
         }
         
         inputReader.send(data)
+    }
+    
+    /// Sends a command and waits for the newline echo, so .before won't include the command
+    func sendline(_ text: String, timeout: TimeInterval = 10.0) async throws {
+        try send(text)
+        // Wait for the newline after the command echo
+        // Terminals typically use \r\n (CRLF) instead of just \n
+        try await expect("\r\n", timeout: timeout)
     }
     
     func flush() async {

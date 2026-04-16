@@ -71,12 +71,12 @@ class Agent {
             try vm.send("PS1=\"#> \"")
             await vm.flush()
 
-            try vm.send("echo 'Hello from MicroVM'")
+            try await vm.sendline("echo 'Hello from MicroVM'")
             try await vm.expect("#> ")
             print("result \(vm.before)")
 
             // Sendline is send + expect
-            try vm.send("uname -a")
+            try await vm.sendline("uname -a")
             try await vm.expect("#> ")
             print("result \(vm.before)")
             

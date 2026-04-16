@@ -69,9 +69,10 @@ class Agent {
             statusMessage = "Testing VM..."
             
             try vm.send("echo 'Hello from MicroVM'")
-            try await vm.wait(pattern: "# ")
-            let output1 = vm.readOutput()
-            responses.append("VM Output: \(output1)")
+            try vm.send("uname -a")
+            // try await vm.wait(pattern: "# ")
+            // let output1 = vm.readOutput()
+            // responses.append("VM Output: \(output1)")
             
             // Step 3: Load model
             statusMessage = "Loading model..."

@@ -12,18 +12,62 @@ import ContainerizationExtras
 import ContainerizationOCI
 import ContainerizationOS
 
+// Custom writer to capture container output
+final class OutputWriter: Writer, @unchecked Sendable {
+    private let onOutput: @Sendable (Data) -> Void
+    
+    init(onOutput: @escaping @Sendable (Data) -> Void) {
+        self.onOutput = onOutput
+    }
+    
+    func write(_ data: Data) throws {
+        onOutput(data)
+    }
+    
+    func close() throws {
+        // Nothing to clean up
+    }
+}
+
+// Custom reader to send input to container
+final class InputReader: ReaderStream, @unchecked Sendable {
+    private let continuation: AsyncStream<Data>.Continuation
+    private let asyncStream: AsyncStream<Data>
+    
+    init() {
+        var cont: AsyncStream<Data>.Continuation!
+        asyncStream = AsyncStream<Data> { continuation in
+            cont = continuation
+        }
+        self.continuation = cont
+    }
+    
+    func stream() -> AsyncStream<Data> {
+        return asyncStream
+    }
+    
+    func send(_ data: Data) {
+        continuation.yield(data)
+    }
+    
+    func close() {
+        continuation.finish()
+    }
+}
+
 class MicroVM {
     private var manager: ContainerManager?
     private var container: LinuxContainer?
-    private var outputBuffer: String = ""
     private var isRunning: Bool = false
+    private var inputReader: InputReader?
     
     private let memory: UInt64
     private let cpus: Int
     private let diskSize: UInt64
     private let kernelPath: String
     
-    var onStatusUpdate: ((String) -> Void)?
+    var onStatusUpdate: (@Sendable (String) -> Void)?
+    var onOutput: (@Sendable (String) -> Void)?
     
     init(memory: Int = 1024, diskSize: Int = 2048, cpus: Int = 2, kernelPath: String) {
         self.memory = UInt64(memory)
@@ -42,18 +86,10 @@ class MicroVM {
             platform: .linuxArm
         )
         
-        // Choose network implementation based on macOS version
-        let network: Network?
-        if #available(macOS 26, *) {
-            network = try? VmnetNetwork()
-        } else {
-            network = nil
-        }
-        
         manager = try await ContainerManager(
             kernel: kernel,
             initfsReference: "ghcr.io/apple/containerization/vminit:0.26.5",
-            network: network,
+            network: nil,
             rosetta: false
         )
         
@@ -65,6 +101,27 @@ class MicroVM {
 
         let containerId = "botparty-\(UUID().uuidString.prefix(8))"
 
+        // Set up I/O streams
+        let inputReader = InputReader()
+        self.inputReader = inputReader
+        
+        // Capture output handler in a local variable
+        let outputHandler = self.onOutput
+        
+        let stdoutWriter = OutputWriter { data in
+            if let output = String(data: data, encoding: .utf8) {
+                print(output)
+                outputHandler?(output)
+            }
+        }
+        
+        let stderrWriter = OutputWriter { data in
+            if let output = String(data: data, encoding: .utf8) {
+                print(output)
+                outputHandler?("ERROR: \(output)")
+            }
+        }
+        
         // Create a local mutable reference to the manager
         var containerManager = self.manager!
         
@@ -77,6 +134,10 @@ class MicroVM {
             config.memoryInBytes = self.memory * 1024 * 1024
             config.process.arguments = ["/bin/sh"]
             config.process.workingDirectory = "/"
+            config.process.terminal = false
+            config.process.stdin = inputReader
+            config.process.stdout = stdoutWriter
+            config.process.stderr = stderrWriter
         }
         
         guard let container = container else {
@@ -93,36 +154,18 @@ class MicroVM {
     }
     
     func send(_ text: String) throws {
-        guard isRunning, container != nil else {
+        guard isRunning, let inputReader = inputReader else {
             throw MicroVMError.notRunning
         }
         
-        // Note: Container I/O would need to be configured through terminal
-        // This is a placeholder for the interface
-        outputBuffer += "Command: \(text)\n"
-    }
-    
-    func wait(pattern: String = "# ", timeout: TimeInterval = 30.0) async throws {
-        let startTime = Date()
-        
-        while !outputBuffer.contains(pattern) {
-            if Date().timeIntervalSince(startTime) > timeout {
-                throw MicroVMError.timeout
-            }
-            
-            try await Task.sleep(nanoseconds: 100_000_000)
+        guard let data = (text + "\n").data(using: .utf8) else {
+            return
         }
+        
+        inputReader.send(data)
     }
     
-    func readOutput() -> String {
-        let output = outputBuffer
-        outputBuffer = ""
-        return output
-    }
-    
-    func readOutputSinceLastRead() -> String {
-        return readOutput()
-    }
+
     
     func shutdown() {
         guard isRunning else { return }
@@ -132,6 +175,11 @@ class MicroVM {
                 if let container = container {
                     try await container.stop()
                 }
+                
+                // Clean up input reader
+                inputReader?.close()
+                inputReader = nil
+                
                 isRunning = false
                 onStatusUpdate?("Container stopped")
             } catch {

@@ -53,6 +53,9 @@ class Agent {
             statusMessage = "Starting MicroVM..."
             
             let vm = MicroVM(memory: 256, diskSize: 1024, cpus: 1)
+            vm.onStatusUpdate = { [weak self] status in
+                self?.statusMessage = status
+            }
             self.microVM = vm
             
             try await vm.start()

@@ -104,13 +104,6 @@ struct AgentSidebarRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                
-                Spacer()
-                
-                if agent.isRunning {
-                    ProgressView()
-                        .controlSize(.small)
-                }
             }
         }
         .padding(.vertical, 4)
@@ -127,8 +120,8 @@ struct AgentDetailView: View {
             // Messages area
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    ForEach(agent.responses.indices, id: \.self) { index in
-                        MessageBubble(text: agent.responses[index])
+                    ForEach(Array(agent.responses.enumerated()), id: \.offset) { index, response in
+                        MessageBubble(text: response)
                     }
                 }
                 .padding()

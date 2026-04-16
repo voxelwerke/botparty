@@ -119,13 +119,10 @@ struct AgentDetailView: View {
         VStack(spacing: 0) {
             // Messages area
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(agent.responses.enumerated()), id: \.offset) { index, response in
-                        MessageBubble(text: response)
-                    }
-                }
-                .padding()
-                .textSelection(.enabled)
+                Text(agent.responses.joined(separator: "\n\n"))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
             }
             
             Divider()

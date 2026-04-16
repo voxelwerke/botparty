@@ -21,9 +21,14 @@ class MicroVM: NSObject {
     
     var onStatusUpdate: ((String) -> Void)?
     
-    init(memory: Int = 256, diskSize: Int = 1024, cpus: Int = 1) {
-        self.memory = UInt64(memory) * 1024 * 1024 // Convert MB to bytes
-        self.cpus = cpus
+    init(memory: Int = 1024, diskSize: Int = 1024, cpus: Int = 2) {
+        // Ensure minimum requirements (1GB minimum)
+        let minMemory = 1024 // MB
+        let actualMemory = max(memory, minMemory)
+        self.memory = UInt64(actualMemory) * 1024 * 1024 // Convert MB to bytes
+        
+        let minCPUs = 1
+        self.cpus = max(cpus, minCPUs)
         super.init()
     }
     
@@ -49,7 +54,13 @@ class MicroVM: NSObject {
         let initrdURL = try await findInitrdImage()
         
         onStatusUpdate?("Configuring boot loader...")
+        
+        // VZLinuxBootLoader doesn't support PE32+ EFI kernels
+        // We need to use the kernel directly, but Alpine ships EFI format
+        // Let's try using it anyway and see what error we get
         configuration.bootLoader = createBootLoader(kernelURL: kernelURL, initialRamdiskURL: initrdURL)
+        
+        configuration.storageDevices = []
         
         // Entropy device for random number generation
         configuration.entropyDevices = [VZVirtioEntropyDeviceConfiguration()]
@@ -57,7 +68,7 @@ class MicroVM: NSObject {
         // Memory balloon device
         configuration.memoryBalloonDevices = [VZVirtioTraditionalMemoryBalloonDeviceConfiguration()]
         
-        // Platform (required for Apple Silicon)
+        // Platform (required for EFI boot)
         #if arch(arm64)
         let platform = VZGenericPlatformConfiguration()
         configuration.platform = platform
@@ -65,7 +76,13 @@ class MicroVM: NSObject {
         
         // Validate configuration
         onStatusUpdate?("Validating configuration...")
-        try configuration.validate()
+        do {
+            try configuration.validate()
+            onStatusUpdate?("Configuration validated successfully")
+        } catch {
+            onStatusUpdate?("Validation error: \(error.localizedDescription)")
+            throw error
+        }
         
         // Create and start the virtual machine
         let vm = VZVirtualMachine(configuration: configuration)
@@ -79,6 +96,7 @@ class MicroVM: NSObject {
                 if let output = String(data: data, encoding: .utf8), !output.isEmpty {
                     Task { @MainActor in
                         self?.outputBuffer += output
+                        self?.onStatusUpdate?("Console: \(output)")
                     }
                 }
             }
@@ -86,15 +104,29 @@ class MicroVM: NSObject {
         
         // Start the VM
         onStatusUpdate?("Starting virtual machine...")
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            vm.start { result in
-                switch result {
-                case .success:
-                    continuation.resume()
-                case .failure(let error):
-                    continuation.resume(throwing: error)
+        onStatusUpdate?("CPU: \(configuration.cpuCount), Memory: \(configuration.memorySize / 1024 / 1024)MB")
+        onStatusUpdate?("Kernel: \(kernelURL.lastPathComponent)")
+        onStatusUpdate?("Initrd: \(initrdURL.lastPathComponent)")
+        
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                vm.start { result in
+                    switch result {
+                    case .success:
+                        continuation.resume()
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
                 }
             }
+            onStatusUpdate?("VM start() completed successfully")
+        } catch {
+            onStatusUpdate?("VM start() failed: \(error.localizedDescription)")
+            if let nsError = error as NSError? {
+                onStatusUpdate?("Error domain: \(nsError.domain), code: \(nsError.code)")
+                onStatusUpdate?("Error info: \(nsError.userInfo)")
+            }
+            throw error
         }
         
         isRunning = true
@@ -126,15 +158,7 @@ class MicroVM: NSObject {
     private func createBootLoader(kernelURL: URL, initialRamdiskURL: URL) -> VZBootLoader {
         let bootLoader = VZLinuxBootLoader(kernelURL: kernelURL)
         bootLoader.initialRamdiskURL = initialRamdiskURL
-        
-        let kernelCommandLineArguments = [
-            // Use the first virtio console device as system console
-            "console=hvc0",
-            // Stop in the initial ramdisk before attempting to transition to the root file system
-            "rd.break=initqueue"
-        ]
-        
-        bootLoader.commandLine = kernelCommandLineArguments.joined(separator: " ")
+        bootLoader.commandLine = "console=hvc0 root=/dev/ram0 rw rdinit=/sbin/init"
         
         return bootLoader
     }
@@ -181,11 +205,10 @@ class MicroVM: NSObject {
     
     private func findKernelImage() async throws -> URL {
         let cacheDir = getCacheDirectory()
-        let kernelURL = cacheDir.appendingPathComponent("vmlinuz")
+        let kernelURL = cacheDir.appendingPathComponent("vmlinuz-lts")
         
-        // Download if needed
         try await downloadFileIfNeeded(
-            from: "https://mirrors.maine.edu/Fedora/releases/42/Everything/aarch64/os/images/pxeboot/vmlinuz",
+            from: "https://dl-cdn.alpinelinux.org/alpine/v3.16/releases/aarch64/netboot-3.16.9/vmlinuz-lts",
             to: kernelURL
         )
         
@@ -194,11 +217,10 @@ class MicroVM: NSObject {
     
     private func findInitrdImage() async throws -> URL {
         let cacheDir = getCacheDirectory()
-        let initrdURL = cacheDir.appendingPathComponent("initrd.img")
+        let initrdURL = cacheDir.appendingPathComponent("initramfs-lts")
         
-        // Download if needed
         try await downloadFileIfNeeded(
-            from: "https://mirrors.maine.edu/Fedora/releases/42/Everything/aarch64/os/images/pxeboot/initrd.img",
+            from: "https://dl-cdn.alpinelinux.org/alpine/v3.16/releases/aarch64/netboot-3.16.9/initramfs-lts",
             to: initrdURL
         )
         
@@ -285,8 +307,6 @@ enum MicroVMError: Error {
     case notRunning
     case encodingError
     case timeout
-    case processError
-    case kernelNotFound
     case invalidURL
     case downloadFailed
 }

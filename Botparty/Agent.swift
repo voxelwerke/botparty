@@ -82,15 +82,26 @@ class Agent {
             }
             
             statusMessage = "Model loaded, starting session..."
-            let session = ChatSession(model)
+            
+            let systemPrompt = """
+            You are a Linux exploration agent in a root shell. 
+            STRICT RULES:
+            1. Output ONLY a single shell command per turn.
+            2. NO markdown, NO code blocks, NO explanations.
+            3. If finished, output 'DONE'.
+            """
+            
+            let session = ChatSession(model, instructions: systemPrompt )
             
             // Step 4: Run AI tasks
-            statusMessage = "Asking about San Francisco..."
-            let response1 = try await session.respond(to: "What are two things to see in San Francisco?")
+            statusMessage = "The system booted, begin"
+            let response1 = try await session.respond(to: "The system booted, begin")
             responses.append("AI: \(response1)")
             
+            let blah = "HAHA ROBOT YOURE STUCK"
+            
             statusMessage = "Asking about restaurants..."
-            let response2 = try await session.respond(to: "How about a great place to eat?")
+            let response2 = try await session.respond(to: blah)
             responses.append("AI: \(response2)")
             
             // Step 5: Clean up

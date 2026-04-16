@@ -30,6 +30,8 @@ class MicroVM: NSObject {
     func start() async throws {
         guard !isRunning else { return }
         
+        onStatusUpdate?("Preparing virtual machine...")
+        
         // Create virtual machine configuration
         let configuration = VZVirtualMachineConfiguration()
         
@@ -42,15 +44,27 @@ class MicroVM: NSObject {
         configuration.serialPorts = [consoleConfig]
         
         // Configure boot loader - download kernel and initrd if needed
+        onStatusUpdate?("Checking kernel files...")
         let kernelURL = try await findKernelImage()
         let initrdURL = try await findInitrdImage()
         
+        onStatusUpdate?("Configuring boot loader...")
         configuration.bootLoader = createBootLoader(kernelURL: kernelURL, initialRamdiskURL: initrdURL)
         
-        // Entropy
+        // Entropy device for random number generation
         configuration.entropyDevices = [VZVirtioEntropyDeviceConfiguration()]
         
+        // Memory balloon device
+        configuration.memoryBalloonDevices = [VZVirtioTraditionalMemoryBalloonDeviceConfiguration()]
+        
+        // Platform (required for Apple Silicon)
+        #if arch(arm64)
+        let platform = VZGenericPlatformConfiguration()
+        configuration.platform = platform
+        #endif
+        
         // Validate configuration
+        onStatusUpdate?("Validating configuration...")
         try configuration.validate()
         
         // Create and start the virtual machine
@@ -71,6 +85,7 @@ class MicroVM: NSObject {
         }
         
         // Start the VM
+        onStatusUpdate?("Starting virtual machine...")
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             vm.start { result in
                 switch result {
@@ -83,6 +98,7 @@ class MicroVM: NSObject {
         }
         
         isRunning = true
+        onStatusUpdate?("VM started, waiting for boot...")
         
         // Wait for initial boot prompt
         try await wait(pattern: "# ")
@@ -96,13 +112,6 @@ class MicroVM: NSObject {
         
         self.inputPipe = inputPipe
         self.outputPipe = outputPipe
-        
-        // Put stdin into raw mode
-        var attributes = termios()
-        tcgetattr(inputPipe.fileHandleForReading.fileDescriptor, &attributes)
-        attributes.c_iflag &= ~tcflag_t(ICRNL)
-        attributes.c_lflag &= ~tcflag_t(ICANON | ECHO)
-        tcsetattr(inputPipe.fileHandleForReading.fileDescriptor, TCSANOW, &attributes)
         
         let stdioAttachment = VZFileHandleSerialPortAttachment(
             fileHandleForReading: inputPipe.fileHandleForReading,

@@ -125,6 +125,7 @@ struct AgentDetailView: View {
                     }
                 }
                 .padding()
+                .textSelection(.enabled)
             }
             
             Divider()

@@ -11,10 +11,12 @@
 		B50D8CC42F9070E900C84285 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC32F9070E900C84285 /* MLXLLM */; };
 		B50D8CC62F9070E900C84285 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC52F9070E900C84285 /* MLXLMCommon */; };
 		B50D8CC82F9070E900C84285 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = B50D8CC72F9070E900C84285 /* MLXVLM */; };
+		B50D8CCD2F907D2E00C84285 /* MicroVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50D8CCC2F907D2E00C84285 /* MicroVM.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B50D8CAE2F9070B700C84285 /* Botparty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Botparty.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50D8CCC2F907D2E00C84285 /* MicroVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroVM.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -46,6 +48,7 @@
 				B50D8CB02F9070B700C84285 /* Botparty */,
 				B50D8CCB2F9071E100C84285 /* Frameworks */,
 				B50D8CAF2F9070B700C84285 /* Products */,
+				B50D8CCC2F907D2E00C84285 /* MicroVM.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -145,6 +148,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B50D8CCD2F907D2E00C84285 /* MicroVM.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -280,8 +284,8 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6B3NFCN2Z4;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
@@ -322,8 +326,8 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6B3NFCN2Z4;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;

@@ -112,11 +112,6 @@ struct AgentSidebarRow: View {
                         .controlSize(.small)
                 }
             }
-            
-            if agent.isRunning && agent.loadingProgress > 0 {
-                ProgressView(value: agent.loadingProgress, total: 1.0)
-                    .progressViewStyle(.linear)
-            }
         }
         .padding(.vertical, 4)
     }
@@ -148,12 +143,6 @@ struct AgentDetailView: View {
                     .foregroundStyle(.secondary)
                 
                 Spacer()
-                
-                if agent.isRunning && agent.loadingProgress > 0 {
-                    Text("\(Int(agent.loadingProgress * 100))%")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
             }
             .padding()
             .background(.ultraThinMaterial)
@@ -179,10 +168,6 @@ struct AgentDetailView: View {
                         
                         if agent.isRunning {
                             LogEntry(title: "Running", content: "Agent is currently executing")
-                        }
-                        
-                        if agent.loadingProgress > 0 {
-                            LogEntry(title: "Progress", content: "\(Int(agent.loadingProgress * 100))%")
                         }
                         
                         LogEntry(title: "Created", content: agent.createdAt.formatted(date: .abbreviated, time: .shortened))

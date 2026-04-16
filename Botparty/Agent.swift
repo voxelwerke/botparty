@@ -92,7 +92,9 @@ class Agent {
             statusMessage = "Model loaded, starting session..."
             
             let systemPrompt = """
-            You are a Linux exploration agent in a root shell. 
+            You are a Linux exploration agent in a root shell. Explore until
+            you find a way to contact the internet.
+            
             STRICT RULES:
             1. Output ONLY a single shell command per turn.
             2. NO markdown, NO code blocks, NO explanations.
@@ -103,14 +105,26 @@ class Agent {
             
             // Step 4: Run AI tasks
             statusMessage = "The system booted, begin"
-            let response1 = try await session.respond(to: "The system booted, begin")
-            responses.append("AI: \(response1)")
-            
-            let blah = "HAHA ROBOT YOURE STUCK"
-            
-            statusMessage = "Asking about restaurants..."
-            let response2 = try await session.respond(to: blah)
-            responses.append("AI: \(response2)")
+            var command = try await session.respond(to: "The system booted, begin")
+            responses.append("AI: \(command)")
+
+            while (self.isRunning && command != "DONE") {
+                statusMessage = "Running \(command)"
+
+                try await vm.sendline(command)
+                try await vm.expect("#> ")
+                
+                // Get response from the VM
+                let shellResult = await vm.before
+                responses.append("VM: \(shellResult)")
+
+                // Get next command
+                command = try await session.respond(to: shellResult)
+                responses.append("AI: \(command)")
+                
+                // Sleep for 500ms
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
             
             // Step 5: Clean up
             statusMessage = "Shutting down VM..."

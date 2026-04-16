@@ -22,6 +22,13 @@ class Agent {
     var responses: [String] = []
     var statusMessage: String = "Ready"
     var createdAt: Date
+    var systemPrompt: String = """
+    You are a Linux exploration agent in a root shell. 
+    STRICT RULES:
+    1. Output ONLY a single shell command per turn.
+    2. NO markdown, NO code blocks, NO explanations.
+    3. If finished, exit the shell.
+    """
     
     // Transient properties (not persisted)
     @Transient var isRunning: Bool = false
@@ -91,17 +98,7 @@ class Agent {
             
             statusMessage = "Model loaded, starting session..."
             
-            let systemPrompt = """
-            You are a Linux exploration agent in a root shell. Explore until
-            you find a way to contact the internet.
-            
-            STRICT RULES:
-            1. Output ONLY a single shell command per turn.
-            2. NO markdown, NO code blocks, NO explanations.
-            3. If finished, output 'DONE'.
-            """
-            
-            let session = ChatSession(model, instructions: systemPrompt )
+            let session = ChatSession(model, instructions: systemPrompt)
             
             // Step 4: Run AI tasks
             statusMessage = "The system booted, begin"

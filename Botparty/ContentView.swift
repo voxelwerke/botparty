@@ -13,35 +13,24 @@ struct ContentView: View {
     @Query(sort: \Agent.createdAt, order: .reverse) private var agents: [Agent]
     @State private var selectedAgent: Agent?
     @State private var showInspector: Bool = true
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     
     var body: some View {
-        NavigationSplitView(columnVisibility: .constant(.all)) {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar - Agents List
             List(selection: $selectedAgent) {
                 ForEach(agents) { agent in
                     AgentSidebarRow(agent: agent)
                         .tag(agent)
-                        .contextMenu {
-                            Button(role: .destructive) {
-                                deleteAgent(agent)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
                 }
             }
             .navigationTitle("Agents")
-            .safeAreaInset(edge: .bottom) {
-                Button(action: createNewAgent) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("New Agent")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: createNewAgent) {
+                        Image(systemName: "plus")
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
                 }
-                .buttonStyle(.plain)
-                .background(.ultraThinMaterial)
             }
         } detail: {
             // Detail View - Chat Area
@@ -75,12 +64,22 @@ struct ContentView: View {
 // Sidebar Row Component
 struct AgentSidebarRow: View {
     @Bindable var agent: Agent
+    @Environment(\.modelContext) private var modelContext
+    @State private var isEditingName: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(agent.name)
+                if isEditingName {
+                    TextField("Agent name", text: $agent.name, onCommit: {
+                        isEditingName = false
+                    })
                     .font(.headline)
+                    .textFieldStyle(.plain)
+                } else {
+                    Text(agent.name)
+                        .font(.headline)
+                }
                 
                 Spacer()
                 
@@ -107,6 +106,19 @@ struct AgentSidebarRow: View {
             }
         }
         .padding(.vertical, 4)
+        .contextMenu {
+            Button {
+                isEditingName = true
+            } label: {
+                Label("Rename", systemImage: "pencil")
+            }
+            
+            Button(role: .destructive) {
+                modelContext.delete(agent)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
     }
 }
 
@@ -166,11 +178,25 @@ struct AgentDetailView: View {
                         if !agent.responses.isEmpty {
                             LogEntry(title: "Response Count", content: "\(agent.responses.count)")
                         }
+
+                        // System promopt
+                        Text("System Prompt")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        TextEditor(text: $agent.systemPrompt)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(height: 360)
+                            .disabled(agent.isRunning)
+                            .opacity(agent.isRunning ? 0.6 : 1.0)
+                            .scrollContentBackground(.hidden)
+                            .background(.quaternary.opacity(0.3))
+                            .cornerRadius(6)
                     }
                 }
             }
             .padding()
-            .inspectorColumnWidth(min: 200, ideal: 250, max: 400)
+            .inspectorColumnWidth(min: 300, ideal: 500, max: 600)
         }
     }
 }

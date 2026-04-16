@@ -77,7 +77,7 @@ class Agent {
             // Step 3: Load model
             statusMessage = "Loading model..."
             
-            let model = try await loadModel(id: "mlx-community/Qwen3-4B-4bit") { progress in
+            let model = try await loadModel(id: "mlx-community/Qwen3-4B-Instruct-2507-4bit") { progress in
                 self.statusMessage = "Loading model: \(Int(progress.fractionCompleted * 100))%"
             }
             

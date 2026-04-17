@@ -68,6 +68,7 @@ struct AgentSidebarRow: View {
     @Bindable var agent: Agent
     @Environment(\.modelContext) private var modelContext
     @State private var isEditingName: Bool = false
+    @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -78,6 +79,10 @@ struct AgentSidebarRow: View {
                     })
                     .font(.headline)
                     .textFieldStyle(.plain)
+                    .focused($isTextFieldFocused)
+                    .onAppear {
+                        isTextFieldFocused = true
+                    }
                 } else {
                     Text(agent.name)
                         .font(.headline)
@@ -108,11 +113,19 @@ struct AgentSidebarRow: View {
             }
         }
         .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .listRowBackground(isEditingName ? Color.clear : nil)
         .contextMenu {
             Button {
                 isEditingName = true
             } label: {
                 Label("Rename", systemImage: "pencil")
+            }
+            
+            Button {
+                duplicateAgent()
+            } label: {
+                Label("Duplicate", systemImage: "doc.on.doc")
             }
             
             Button(role: .destructive) {
@@ -121,6 +134,12 @@ struct AgentSidebarRow: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+    }
+    
+    private func duplicateAgent() {
+        let duplicate = Agent(name: agent.name + " Copy")
+        duplicate.systemPrompt = agent.systemPrompt
+        modelContext.insert(duplicate)
     }
 }
 

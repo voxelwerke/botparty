@@ -117,12 +117,13 @@ class Agent {
             // responses.append("VM Output: \(output1)")
             
             // Step 3: Load model
-            self.statusMessage = "Loading model..."
+            responses.append("Loading AI...")
+            
+            self.statusMessage = "Loading AI..."
             
             let container = try await ModelManager.shared.getModel { progress in
                 self.statusMessage = "Loading model: \(Int(progress.fractionCompleted * 100))%"
             }
-            self.statusMessage = "Running..."
             
             let instructions = self.systemPrompt + "\n"
             print(instructions)
@@ -130,7 +131,8 @@ class Agent {
             let session = ChatSession(container, instructions: instructions)
             
             // Step 4: Run AI tasks
-            statusMessage = "Getting first AI response..."
+            self.statusMessage = "Running..."
+
             print("DEBUG: About to get first AI response")
             var command = try await session.respond(to: "The system booted, begin")
             print("DEBUG: Got command: \(command)")

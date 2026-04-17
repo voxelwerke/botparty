@@ -136,8 +136,8 @@ class Agent {
             print("DEBUG: Got command: \(command)")
             responses.append("AI: \(command)")
 
-            while (self.isRunning && command != "DONE") {
-                statusMessage = "Running \(command)"
+            while (self.isRunning) {
+//                statusMessage = "Running \(command)"
 
                 try await vm.sendline(command)
                 try await vm.expect("#> ")
@@ -150,15 +150,20 @@ class Agent {
                 command = try await session.respond(to: shellResult)
                 responses.append("AI: \(command)")
                 
+                // If exit, then exit
+                if (command.hasPrefix("exit")) {
+                    self.isRunning = false
+                }
+                
                 // Sleep for 500ms
                 try? await Task.sleep(nanoseconds: 500_000_000)
             }
             
             // Step 5: Clean up
-            statusMessage = "Shutting down..."
+            statusMessage = "Exiting..."
             vm.shutdown()
             
-            statusMessage = "Stopped"
+            statusMessage = "Exited"
             
         } catch {
             responses.append("Error: \(error.localizedDescription)")

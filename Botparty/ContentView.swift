@@ -124,67 +124,6 @@ struct AgentSidebarRow: View {
     }
 }
 
-import SwiftUI
-
-class AnsiParser {
-    static func parse(_ input: String) -> AttributedString {
-        var container = AttributeContainer()
-        var result = AttributedString()
-        
-        // Split by the Escape character
-        let components = input.components(separatedBy: "\u{1b}[")
-        
-        for (index, component) in components.enumerated() {
-            if index == 0 {
-                // The first part is just plain text before any escape codes
-                result += AttributedString(component)
-                continue
-            }
-            
-            // Look for the 'm' that ends the escape sequence
-            if let mIndex = component.firstIndex(of: "m") {
-                let code = component[..<mIndex]
-                let remainingText = component[component.index(after: mIndex)...]
-                
-                // Update our state based on the code
-                updateAttributes(&container, for: String(code))
-                
-                // Add the text with the current state applied
-                var coloredSegment = AttributedString(String(remainingText))
-                coloredSegment.mergeAttributes(container)
-                result += coloredSegment
-            } else {
-                // If no 'm' found, it wasn't a formatting code, just print it
-                result += AttributedString(component)
-            }
-        }
-        return result
-    }
-    
-    private static func updateAttributes(_ container: inout AttributeContainer, for code: String) {
-        switch code {
-        case "0": // Reset
-            container = AttributeContainer()
-        case "1": // Bold
-            container.font = .system(.body, design: .monospaced).bold()
-        case "31", "1;31": // Red
-            container.foregroundColor = .red
-        case "32", "1;32": // Green
-            container.foregroundColor = .green
-        case "33", "1;33": // Yellow
-            container.foregroundColor = .yellow
-        case "34", "1;34": // Blue
-            container.foregroundColor = .blue
-        case "35", "1;35": // Magenta
-            container.foregroundColor = .pink // Monokai vibes
-        case "36", "1;36": // Cyan
-            container.foregroundColor = .cyan
-        default:
-            break // Ignore codes we don't care about (like cursor movement)
-        }
-    }
-}
-
 
 
 // Detail View Component
@@ -198,17 +137,17 @@ struct AgentDetailView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
-                        ForEach(Array(agent.responses.enumerated()), id: \.offset) { index, response in
-                            MessageBubble(text: response)
-                                .id(index)
+                        ForEach(agent.messages) { message in
+                            MessageBubble(message: message)
+                                .id(message.id)
                         }
                     }
                     .padding()
                 }
-                .onChange(of: agent.responses.count) { oldValue, newValue in
+                .onChange(of: agent.messages.count) { oldValue, newValue in
                     if newValue > 0 {
                         withAnimation {
-                            proxy.scrollTo(newValue - 1, anchor: .bottom)
+                            proxy.scrollTo(agent.messages.last?.id, anchor: .bottom)
                         }
                     }
                 }
@@ -252,8 +191,8 @@ struct AgentDetailView: View {
                         
                         LogEntry(title: "Created", content: agent.createdAt.formatted(date: .abbreviated, time: .shortened))
                         
-                        if !agent.responses.isEmpty {
-                            LogEntry(title: "Response Count", content: "\(agent.responses.count)")
+                        if !agent.messages.isEmpty {
+                            LogEntry(title: "Message Count", content: "\(agent.messages.count)")
                         }
 
                         // System promopt
@@ -280,16 +219,36 @@ struct AgentDetailView: View {
 
 // Message Bubble Component
 struct MessageBubble: View {
-    let text: String
+    let message: Message
     
     var body: some View {
-        Text(AnsiParser.parse(text))
-            .font(.system(.body, design: .monospaced))
-            .padding(12)
-            .background(.regularMaterial)
-            .cornerRadius(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .textSelection(.enabled)
+        HStack {
+            if message.type == .ai {
+                Spacer(minLength: 60)
+            }
+            
+            Text(AnsiParser.parse(message.content))
+                .font(.system(.body, design: .monospaced))
+                .padding(12)
+                .background(backgroundColor)
+                .cornerRadius(12)
+                .textSelection(.enabled)
+            
+            if message.type != .ai {
+                Spacer(minLength: 60)
+            }
+        }
+    }
+    
+    private var backgroundColor: Color {
+        switch message.type {
+        case .ai:
+            return Color.blue.opacity(0.2)
+        case .vm:
+            return Color.gray.opacity(0.2)
+        case .system:
+            return Color.secondary.opacity(0.1)
+        }
     }
 }
 

@@ -43,11 +43,27 @@ actor ModelManager {
 }
 
 
+enum MessageType: Codable {
+    case ai
+    case vm
+    case system
+}
+
+struct Message: Codable, Identifiable {
+    let id: UUID
+    let type: MessageType
+    let content: String
+    
+    init(type: MessageType, content: String) {
+        self.id = UUID()
+        self.type = type
+        self.content = content
+    }
+}
+
 @Model
 class Agent {
     var name: String
-    var responses: [String] = []
-    var statusMessage: String = "Ready"
     var createdAt: Date
     var systemPrompt: String = """
     You are a Linux exploration agent in a root shell. 
@@ -57,7 +73,10 @@ class Agent {
     3. If finished, exit the shell.
     """
     
-    // Transient properties (not persisted)
+    // Transient properties (not persisted - reset on each launch)
+    @Transient var responses: [String] = []
+    @Transient var messages: [Message] = []
+    @Transient var statusMessage: String = ""
     @Transient var isRunning: Bool = false
     @Transient var microVM: MicroVM?
     
@@ -82,18 +101,29 @@ class Agent {
     func run() async {
         isRunning = true
         responses = []
+        messages = []
         
         do {
+            messages.append(Message(type: .system, content: "Loading AI..."))
+            self.statusMessage = "Loading AI..."
+            
+            let container = try await ModelManager.shared.getModel { progress in
+                if (progress.fractionCompleted < 0.8) {
+                    self.statusMessage = "Loading model: \(Int(progress.fractionCompleted * 100))%"
+                } else {
+                    // don't do shit it's annoying
+                }
+            }
+
             // Step 1: Create and start MicroVM
-            self.statusMessage = "Starting MicroVM..."
+            self.statusMessage = "Loading MicroVM..."
             
             guard let kernelPath = Bundle.main.path(forResource: "vmlinux", ofType: nil) else {
                 throw NSError(domain: "Agent", code: 1, userInfo: [NSLocalizedDescriptionKey: "vmlinux kernel file not found"])
             }
             let vm = MicroVM(memory: 256, diskSize: 1024, cpus: 1, kernelPath: kernelPath)
             vm.onStatusUpdate = { [weak self] status in
-//                self?.statusMessage = status
-                self?.responses.append(status)
+                self?.messages.append(Message(type: .system, content: status))
             }
             self.microVM = vm
             
@@ -114,16 +144,6 @@ class Agent {
             try await vm.expect("#> ")
             print("result \(vm.before)")
             
-            // responses.append("VM Output: \(output1)")
-            
-            // Step 3: Load model
-            responses.append("Loading AI...")
-            
-            self.statusMessage = "Loading AI..."
-            
-            let container = try await ModelManager.shared.getModel { progress in
-                self.statusMessage = "Loading model: \(Int(progress.fractionCompleted * 100))%"
-            }
             
             let instructions = self.systemPrompt + "\n"
             print(instructions)
@@ -136,21 +156,20 @@ class Agent {
             print("DEBUG: About to get first AI response")
             var command = try await session.respond(to: "The system booted, begin")
             print("DEBUG: Got command: \(command)")
-            responses.append("AI: \(command)")
+            messages.append(Message(type: .ai, content: command))
 
             while (self.isRunning) {
-//                statusMessage = "Running \(command)"
-
                 try await vm.sendline(command)
                 try await vm.expect("#> ")
                 
                 // Get response from the VM
-                let shellResult = vm.before
-                responses.append("VM: \(shellResult)")
+                let bytes = finalizeShellBytes(vm.before)
+                let shellResult = String(data: bytes, encoding: .utf8)!
+                messages.append(Message(type: .vm, content: shellResult))
 
                 // Get next command
                 command = try await session.respond(to: shellResult)
-                responses.append("AI: \(command)")
+                messages.append(Message(type: .ai, content: command))
                 
                 // If exit, then exit
                 if (command.hasPrefix("exit")) {
@@ -168,7 +187,7 @@ class Agent {
             statusMessage = "Exited"
             
         } catch {
-            responses.append("Error: \(error.localizedDescription)")
+            messages.append(Message(type: .system, content: "Error: \(error.localizedDescription)"))
             statusMessage = "Error: \(error.localizedDescription)"
             microVM?.shutdown()
             microVM = nil

@@ -90,7 +90,7 @@ class MicroVM {
         self.bufferUpdateStream = stream
         self.bufferUpdateContinuation = continuation
         
-        onStatusUpdate?("Starting MicroVM...")
+        onStatusUpdate?("Loading MicroVM...")
         
         let kernel = Kernel(
             path: URL(fileURLWithPath: kernelPath),

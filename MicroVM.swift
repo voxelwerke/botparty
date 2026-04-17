@@ -90,7 +90,7 @@ class MicroVM {
         self.bufferUpdateStream = stream
         self.bufferUpdateContinuation = continuation
         
-        onStatusUpdate?("Initializing container manager...")
+        onStatusUpdate?("Starting MicroVM...")
         
         let kernel = Kernel(
             path: URL(fileURLWithPath: kernelPath),
@@ -107,8 +107,6 @@ class MicroVM {
         guard manager != nil else {
             throw MicroVMError.initializationFailed
         }
-
-        onStatusUpdate?("Creating container...")
 
         let containerId = "botparty-\(UUID().uuidString.prefix(8))"
 
@@ -153,13 +151,10 @@ class MicroVM {
             throw MicroVMError.containerCreationFailed
         }
         
-        onStatusUpdate?("Starting container...")
-        
         try await container.create()
         try await container.start()
         
         isRunning = true
-        onStatusUpdate?("Container started successfully")
     }
     
     func send(_ text: String) throws {
@@ -250,9 +245,9 @@ class MicroVM {
                 bufferUpdateStream = nil
                 
                 isRunning = false
-                onStatusUpdate?("Container stopped")
+                onStatusUpdate?("MicroVM stopped")
             } catch {
-                onStatusUpdate?("Error stopping container: \(error)")
+                onStatusUpdate?("Error stopping MicroVM: \(error)")
             }
         }
     }

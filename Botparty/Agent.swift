@@ -78,29 +78,29 @@ class Agent {
         microVM = nil
     }
     
+    @MainActor
     func run() async {
         isRunning = true
         responses = []
         
         do {
             // Step 1: Create and start MicroVM
-            statusMessage = "Starting MicroVM..."
+            self.statusMessage = "Starting MicroVM..."
             
             guard let kernelPath = Bundle.main.path(forResource: "vmlinux", ofType: nil) else {
                 throw NSError(domain: "Agent", code: 1, userInfo: [NSLocalizedDescriptionKey: "vmlinux kernel file not found"])
             }
             let vm = MicroVM(memory: 256, diskSize: 1024, cpus: 1, kernelPath: kernelPath)
             vm.onStatusUpdate = { [weak self] status in
-                self?.statusMessage = status
+//                self?.statusMessage = status
                 self?.responses.append(status)
             }
             self.microVM = vm
             
             try await vm.start()
-            responses.append("MicroVM started successfully")
+            self.statusMessage = "MicroVM started"
             
             // Step 2: Test VM with a simple command
-            statusMessage = "Testing VM..."
 
             try vm.send("PS1=\"#> \"")
             await vm.flush()
@@ -117,12 +117,12 @@ class Agent {
             // responses.append("VM Output: \(output1)")
             
             // Step 3: Load model
-            statusMessage = "Loading model..."
+            self.statusMessage = "Loading model..."
             
             let container = try await ModelManager.shared.getModel { progress in
                 self.statusMessage = "Loading model: \(Int(progress.fractionCompleted * 100))%"
             }
-            statusMessage = "Model loaded, starting session..."
+            self.statusMessage = "Running..."
             
             let instructions = self.systemPrompt + "\n"
             print(instructions)
@@ -135,7 +135,6 @@ class Agent {
             var command = try await session.respond(to: "The system booted, begin")
             print("DEBUG: Got command: \(command)")
             responses.append("AI: \(command)")
-            statusMessage = "Running commands..."
 
             while (self.isRunning && command != "DONE") {
                 statusMessage = "Running \(command)"
@@ -144,7 +143,7 @@ class Agent {
                 try await vm.expect("#> ")
                 
                 // Get response from the VM
-                let shellResult = await vm.before
+                let shellResult = vm.before
                 responses.append("VM: \(shellResult)")
 
                 // Get next command
@@ -156,10 +155,10 @@ class Agent {
             }
             
             // Step 5: Clean up
-            statusMessage = "Shutting down VM..."
+            statusMessage = "Shutting down..."
             vm.shutdown()
             
-            statusMessage = "Complete!"
+            statusMessage = "Stopped"
             
         } catch {
             responses.append("Error: \(error.localizedDescription)")

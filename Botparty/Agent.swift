@@ -14,6 +14,33 @@ import MLXNN
 import MLXOptimizers
 import SwiftUI
 import Tokenizers
+import MLX
+import MLXLLM
+import MLXLMCommon
+
+actor ModelManager {
+    static let shared = ModelManager()
+    
+    private var modelContainer: MLXLMCommon.ModelContainer?
+    private var modelId = "mlx-community/Qwen3-4B-Instruct-2507-4bit"
+    
+    private init() {}
+
+    func getModel(progressHandler: @escaping (Progress) -> Void) async throws -> MLXLMCommon.ModelContainer {
+        // Return existing model if already loaded
+        if let container = modelContainer {
+            return container
+        }
+        
+        // Load the model
+        let container = try await loadModelContainer(id: modelId) { progress in
+            progressHandler(progress)
+        }
+        
+        self.modelContainer = container
+        return container
+    }
+}
 
 
 @Model
@@ -92,16 +119,15 @@ class Agent {
             // Step 3: Load model
             statusMessage = "Loading model..."
             
-            let model = try await loadModel(id: "mlx-community/Qwen3-4B-Instruct-2507-4bit") { progress in
+            let container = try await ModelManager.shared.getModel { progress in
                 self.statusMessage = "Loading model: \(Int(progress.fractionCompleted * 100))%"
             }
-            
             statusMessage = "Model loaded, starting session..."
             
             let instructions = self.systemPrompt + "\n"
             print(instructions)
             
-            let session = ChatSession(model, instructions: instructions)
+            let session = ChatSession(container, instructions: instructions)
             
             // Step 4: Run AI tasks
             statusMessage = "Getting first AI response..."

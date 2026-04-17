@@ -66,7 +66,8 @@ class Agent {
     var name: String
     var createdAt: Date
     var systemPrompt: String = """
-    You are a Linux exploration agent in a root shell. 
+    You are a ghost in a shell. 
+    
     STRICT RULES:
     1. Output ONLY a single shell command per turn.
     2. NO markdown, NO code blocks, NO explanations.
@@ -76,7 +77,7 @@ class Agent {
     // Transient properties (not persisted - reset on each launch)
     @Transient var responses: [String] = []
     @Transient var messages: [Message] = []
-    @Transient var statusMessage: String = ""
+    @Transient var statusMessage: String = "Paused"
     @Transient var isRunning: Bool = false
     @Transient var microVM: MicroVM?
     
@@ -86,15 +87,14 @@ class Agent {
     }
     
     func play() async {
+        self.isRunning = true
         await run()
     }
     
-    func pause() {
+    func stop() {
         // Pause functionality - stops execution and shuts down VM
         isRunning = false
         statusMessage = "Paused"
-        microVM?.shutdown()
-        microVM = nil
     }
     
     @MainActor
@@ -167,6 +167,9 @@ class Agent {
                 let shellResult = String(data: bytes, encoding: .utf8)!
                 messages.append(Message(type: .vm, content: shellResult))
 
+                // Sleep for 500ms
+                try? await Task.sleep(nanoseconds: 500_000_000)
+
                 // Get next command
                 command = try await session.respond(to: shellResult)
                 messages.append(Message(type: .ai, content: command))
@@ -175,16 +178,9 @@ class Agent {
                 if (command.hasPrefix("exit")) {
                     self.isRunning = false
                 }
-                
-                // Sleep for 500ms
-                try? await Task.sleep(nanoseconds: 500_000_000)
             }
             
-            // Step 5: Clean up
-            statusMessage = "Exiting..."
-            vm.shutdown()
-            
-            statusMessage = "Exited"
+            statusMessage = "Paused"
             
         } catch {
             messages.append(Message(type: .system, content: "Error: \(error.localizedDescription)"))

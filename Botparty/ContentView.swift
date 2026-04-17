@@ -23,6 +23,9 @@ struct ContentView: View {
                 ForEach(agents) { agent in
                     AgentSidebarRow(agent: agent)
                         .tag(agent)
+                        .listRowBackground(
+                            selectedAgent == agent ? Color.gray.opacity(0.2) : Color.clear
+                        )
                 }
             }
             .navigationTitle("Agents")
@@ -92,14 +95,16 @@ struct AgentSidebarRow: View {
                 
                 Button(action: {
                     if agent.isRunning {
-                        agent.pause()
+                        Task {
+                            await agent.stop()
+                        }
                     } else {
                         Task {
                             await agent.play()
                         }
                     }
                 }) {
-                    Image(systemName: agent.isRunning ? "pause.fill" : "play.fill")
+                    Image(systemName: agent.isRunning ? "stop.fill" : "play.fill")
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)

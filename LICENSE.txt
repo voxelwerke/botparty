@@ -1,0 +1,79 @@
+(Human readable summary: You are free to use, study, and modify this
+code. However, you cannot use it to track, addict, manipulate or spy on
+people, you cannot use it to sell ads, and you cannot use it to run a
+commercial service that competes with Voxelwerke. We keep the exclusive
+rights to make money. Because code ages fast, every contribution
+becomes MIT Licensed after 3 years. Suck it capitalism.)
+
+# Voxelwerke Source License (VSL) v1.1
+
+Licensor:           Nolan Consulting Limited (trading as Voxelwerke)
+Initial License:    Voxelwerke Source License v1.1
+Change License:     MIT License
+Change Date:        3 years from the date of each contribution.
+
+1. License Grant
+
+Subject to the terms and conditions of this License, the Licensor
+hereby grants you a non-exclusive, worldwide, royalty-free,
+non-transferable license to copy, modify, create derivative works of,
+and use the Licensed Work for any purpose except for the Restricted Use
+and the Competitive Use.
+
+2. Restricted Use
+
+You may not deploy, distribute, or utilize the Licensed Work nor any
+software derived from it in any manner that facilitates, includes, or
+relies upon:
+
+* Tracking: Behavioral profiling, session recording, or fingerprinting
+  of users.
+* Marketing: Targeted advertising or lead generation for third parties.
+* Surveillance: Data harvesting, bulk collection of PII (Personally
+  Identifiable Information), or clandestine monitoring.
+* Sponsored Content: "Native advertising," paid product placement, or
+  dark patterns intended to promote third-party products.
+
+3. Competitive Use
+
+The Licensor reserves the exclusive right to commercially exploit the
+Licensed Work. Non-commercial use—including personal use, academic
+research, and internal business tools—is permitted. However, you may not
+provide, distribute, or make available the Licensed Work, or any derivative
+work thereof, in any form that generates revenue, seeks profit, or
+provides a commercial advantage in competition with the Licensor’s business
+offerings.
+
+4. Change to MIT License
+
+On the Change Date (exactly 3 years from the date of the first public
+availability of a specific version or contribution), the restrictions
+in Section 2 and Section 3 expire for that version, and the Licensor
+hereby grants you a license to that version under the terms of the MIT
+License.
+
+5. Contributor Agreement
+
+By contributing to this repository, you agree that your contributions
+are licensed under this License, including the rolling transition to
+the MIT License three years after the date your contribution is made
+public. You represent that you have the right to license your contributions
+under these terms.
+
+6. Governing Law and Jurisdiction
+
+This License and any dispute or claim arising out of or in connection
+with it shall be governed by and construed in accordance with the laws
+of New Zealand. The parties irrevocably agree that the courts of New
+Zealand shall have exclusive jurisdiction to settle any dispute or
+claim.
+
+7. Disclaimer of Warranty
+
+THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -22,11 +22,15 @@ actor ModelManager {
     static let shared = ModelManager()
     
     private var modelContainer: MLXLMCommon.ModelContainer?
-    private var modelId = "mlx-community/Qwen3-4B-Instruct-2507-4bit"
+    
     
     private init() {}
 
-    func getModel(progressHandler: @escaping (Progress) -> Void) async throws -> MLXLMCommon.ModelContainer {
+    func getModel(modelId: String, progressHandler: @escaping (Progress) -> Void) async throws -> MLXLMCommon.ModelContainer {
+        if (modelId != "mlx-community/Qwen3-4B-Instruct-2507-4bit") {
+            throw NSError(domain: "Model not supported", code: 1)
+        }
+        
         // Return existing model if already loaded
         if let container = modelContainer {
             return container
@@ -77,6 +81,7 @@ class Agent {
     var responses: [String] = []
     var messages: [Message] = []
     var statusMessage: String = "Paused"
+    var modelId = "mlx-community/Qwen3-4B-Instruct-2507-4bit"
     
     // Transient properties (not persisted - reset on each launch)
     @Transient var isRunning: Bool = false
@@ -111,23 +116,23 @@ class Agent {
         await MainActor.run {
             self.responses = []
             self.messages = []
-            self.messages.append(Message(type: .system, content: "Loading AI..."))
-            self.statusMessage = "Loading AI..."
+            self.messages.append(Message(type: .system, content: "Loading \(self.modelId)..."))
+            self.statusMessage = "Loading \(self.modelId)..."
         }
         
         do {
             
-            let container = try await ModelManager.shared.getModel { progress in
+            let container = try await ModelManager.shared.getModel(modelId: self.modelId) { progress in
                 if (progress.fractionCompleted < 0.8) {
                     Task { @MainActor in
-                        self.statusMessage = "Loading model: \(Int(progress.fractionCompleted * 100))%"
+                        self.statusMessage = "(Int(progress.fractionCompleted * 100))% Loading \(self.modelId) "
                     }
                 }
             }
 
             // Step 1: Create and start MicroVM
             await MainActor.run {
-                self.statusMessage = "Loading MicroVM..."
+                self.statusMessage = "Starting VM..."
             }
             
             guard let kernelPath = Bundle.main.path(forResource: "vmlinux", ofType: nil) else {
@@ -211,6 +216,10 @@ class Agent {
                 let nextCommand = try await Task.detached {
                     try await session.respond(to: shellResult)
                 }.value
+                
+                if (!self.isRunning) {
+                    break
+                }
                 
                 await MainActor.run {
                     self.messages.append(Message(type: .ai, content: nextCommand))

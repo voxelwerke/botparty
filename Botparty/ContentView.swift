@@ -201,17 +201,17 @@ struct AgentDetailView: View {
         .inspector(isPresented: $showInspector) {
             // Inspector - Log/Reasoning
             VStack(alignment: .leading, spacing: 8) {
-                Text("Log & Reasoning")
+                Text(agent.name)
                     .font(.headline)
                     .padding(.bottom, 4)
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
-                        LogEntry(title: "Status", content: agent.statusMessage)
+                        // LogEntry(title: "Status", content: agent.statusMessage)
                         
-                        if agent.isRunning {
-                            LogEntry(title: "Running", content: "Agent is currently executing")
-                        }
+//                        if agent.isRunning {
+//                            LogEntry(title: "Running", content: "Agent is currently executing")
+//                        }
                         
                         LogEntry(title: "Created", content: agent.createdAt.formatted(date: .abbreviated, time: .shortened))
                         
@@ -219,9 +219,11 @@ struct AgentDetailView: View {
                             LogEntry(title: "Message Count", content: "\(agent.messages.count)")
                         }
 
+                        LogEntry(title: "Model", content: agent.modelId)
+
                         // System promopt
                         Text("System Prompt")
-                            .font(.caption)
+                            .font(.headline)
                             .foregroundStyle(.secondary)
                         
                         TextEditor(text: $agent.systemPrompt)
@@ -284,16 +286,13 @@ struct LogEntry: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.caption)
+                .font(.headline)
                 .foregroundStyle(.secondary)
             Text(content)
                 .font(.system(.caption, design: .monospaced))
                 .textSelection(.enabled)
         }
-        .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.3))
-        .cornerRadius(6)
     }
 }
 

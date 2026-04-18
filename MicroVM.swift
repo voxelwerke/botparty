@@ -11,6 +11,7 @@ import ContainerizationError
 import ContainerizationExtras
 import ContainerizationOCI
 import ContainerizationOS
+import vmnet
 
 // Custom writer to capture container output
 final class OutputWriter: Writer, @unchecked Sendable {
@@ -97,10 +98,13 @@ class MicroVM {
             platform: .linuxArm
         )
         
+        // Enable NAT networking for internet access
+        let network = try await VmnetNetwork(mode: .VMNET_SHARED_MODE)
+        
         manager = try await ContainerManager(
             kernel: kernel,
             initfsReference: "ghcr.io/apple/containerization/vminit:0.26.5",
-            network: nil,
+            network: network,
             rosetta: false
         )
         

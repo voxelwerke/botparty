@@ -74,10 +74,10 @@ class Agent {
     3. If finished, exit the shell.
     """
     
+    var responses: [String] = []
+    var messages: [Message] = []
+    var statusMessage: String = "Paused"
     // Transient properties (not persisted - reset on each launch)
-    @Transient var responses: [String] = []
-    @Transient var messages: [Message] = []
-    @Transient var statusMessage: String = "Paused"
     @Transient var isRunning: Bool = false
     @Transient var microVM: MicroVM?
     

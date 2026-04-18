@@ -228,8 +228,11 @@ class Agent {
                 // Get response from the VM
                 let bytes = finalizeShellBytes(vm.before)
                 let shellResult = String(data: bytes, encoding: .utf8)!
-                await MainActor.run {
-                    self.messages.append(Message(type: .vm, content: shellResult))
+                
+                if !shellResult.isEmpty {
+                    await MainActor.run {
+                        self.messages.append(Message(type: .vm, content: shellResult))
+                    }
                 }
 
                 // Sleep for 500ms

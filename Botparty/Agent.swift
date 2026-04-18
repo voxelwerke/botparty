@@ -137,7 +137,6 @@ class Agent {
         await MainActor.run {
             self.responses = []
             self.messages = []
-            self.messages.append(Message(type: .system, content: "Loading \(self.modelId)..."))
             self.statusMessage = "Loading \(self.modelId)..."
         }
         

@@ -481,16 +481,6 @@ struct AgentControlButtons: View {
                 }
                 .buttonStyle(.plain)
             }
-            
-            if agent.state == .paused || agent.state.isRunning {
-                Button(action: {
-                    agent.stop()
-                }) {
-                    Image(systemName: "stop.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
         }
     }
 }

@@ -56,6 +56,15 @@ struct ContentView: View {
         let newAgent = Agent()
         modelContext.insert(newAgent)
         selectedAgent = newAgent
+        
+        // Auto-launch the new agent
+        Task {
+            // Stop all paused agents
+            for agent in agents where agent.state == .paused {
+                agent.stop()
+            }
+            await newAgent.play()
+        }
     }
     
     private func deleteAgent(_ agent: Agent) {
@@ -70,6 +79,7 @@ struct ContentView: View {
 struct AgentSidebarRow: View {
     @Bindable var agent: Agent
     @Environment(\.modelContext) private var modelContext
+    @Query private var allAgents: [Agent]
     @State private var isEditingName: Bool = false
     @FocusState private var isTextFieldFocused: Bool
     
@@ -93,21 +103,7 @@ struct AgentSidebarRow: View {
                 
                 Spacer()
                 
-                Button(action: {
-                    if agent.isRunning {
-                        Task {
-                            await agent.stop()
-                        }
-                    } else {
-                        Task {
-                            await agent.play()
-                        }
-                    }
-                }) {
-                    Image(systemName: agent.isRunning ? "stop.fill" : "play.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
+                AgentControlButtons(agent: agent)
             }
             
             HStack {
@@ -154,6 +150,7 @@ struct AgentSidebarRow: View {
 struct AgentDetailView: View {
     @Bindable var agent: Agent
     @Binding var showInspector: Bool
+    @State private var messageInput: String = ""
     
     var body: some View {
         VStack(spacing: 0) {
@@ -176,6 +173,42 @@ struct AgentDetailView: View {
                     }
                 }
             }
+            
+            Divider()
+            
+            // Input bar
+            HStack(spacing: 12) {
+                Button(action: {
+                    // Add action
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                
+                TextField("Enter message", text: $messageInput)
+                    .textFieldStyle(.plain)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(18)
+                    .onSubmit {
+                        sendMessage()
+                    }
+                
+                Button(action: {
+                    // Voice input action
+                }) {
+                    Image(systemName: "waveform")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial)
             
             Divider()
             
@@ -202,8 +235,8 @@ struct AgentDetailView: View {
             // Inspector - Log/Reasoning
             VStack(alignment: .leading, spacing: 8) {
                 Text(agent.name)
-                    .font(.headline)
-                    .padding(.bottom, 4)
+                    .font(.largeTitle)
+                    .padding(.bottom, 8)
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
@@ -221,16 +254,22 @@ struct AgentDetailView: View {
 
                         LogEntry(title: "Model", content: agent.modelId)
 
-                        // System promopt
-                        Text("System Prompt")
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
+                        // System prompt with controls
+                        HStack {
+                            Text("System Prompt")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                            
+                            Spacer()
+                            
+                            AgentControlButtons(agent: agent)
+                        }
                         
                         TextEditor(text: $agent.systemPrompt)
                             .font(.system(.body, design: .monospaced))
                             .frame(height: 360)
-                            .disabled(agent.isRunning)
-                            .opacity(agent.isRunning ? 0.6 : 1.0)
+                            .disabled(agent.state.isRunning)
+                            .opacity(agent.state.isRunning ? 0.6 : 1.0)
                             .scrollContentBackground(.hidden)
                             .background(.quaternary.opacity(0.3))
                             .cornerRadius(6)
@@ -240,6 +279,16 @@ struct AgentDetailView: View {
             .padding()
             .inspectorColumnWidth(min: 300, ideal: 500, max: 600)
         }
+    }
+    
+    private func sendMessage() {
+        guard !messageInput.isEmpty else { return }
+        
+        // Add user message to the chat
+        agent.messages.append(Message(type: .vm, content: messageInput))
+        
+        // Clear input
+        messageInput = ""
     }
 }
 
@@ -293,6 +342,50 @@ struct LogEntry: View {
                 .textSelection(.enabled)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// Agent Control Buttons Component
+struct AgentControlButtons: View {
+    @Bindable var agent: Agent
+    @Query private var allAgents: [Agent]
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            if agent.state.isRunning {
+                Button(action: {
+                    agent.pause()
+                }) {
+                    Image(systemName: "pause.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Button(action: {
+                    Task {
+                        // Stop all paused agents when starting a new one
+                        for otherAgent in allAgents where otherAgent != agent && otherAgent.state == .paused {
+                            otherAgent.stop()
+                        }
+                        await agent.play()
+                    }
+                }) {
+                    Image(systemName: "play.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            if agent.state == .paused || agent.state.isRunning {
+                Button(action: {
+                    agent.stop()
+                }) {
+                    Image(systemName: "stop.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
 

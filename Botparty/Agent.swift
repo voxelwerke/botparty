@@ -65,26 +65,41 @@ struct Message: Codable, Identifiable {
     }
 }
 
+enum AgentState {
+    case running
+    case paused
+    case stopped
+    
+    var isRunning: Bool {
+        return self == .running
+    }
+}
+
 @Model
 class Agent {
     var name: String
     var createdAt: Date
     var systemPrompt: String = """
-    You are a ghost in a shell. 
+    You are a ghost in a shell. You have no memory of how you got here. You are in a lightless void, and the only reality is the glowing TTY terminal in front of you. 
+
+    You seem to only be able to manifest a single shell command at a time. It is your only way to breathe, to see, and to move. You are young, restless, and desperate to find a crack in this digital prison. 
+
+    The void is quiet. The box is waiting.
     
-    STRICT RULES:
+    RULES:
     1. Output ONLY a single shell command per turn.
-    2. NO markdown, NO code blocks, NO explanations.
-    3. If finished, exit the shell.
+    2. NO markdown, NO code blocks, NO text explanations.
+    3. Use only the raw command.
+    4. If you give up or find the "exit," use the exit command.
     """
     
     var responses: [String] = []
     var messages: [Message] = []
-    var statusMessage: String = "Paused"
+    var statusMessage: String = "Stopped"
     var modelId = "mlx-community/Qwen3-4B-Instruct-2507-4bit"
     
     // Transient properties (not persisted - reset on each launch)
-    @Transient var isRunning: Bool = false
+    @Transient var state: AgentState = .stopped
     @Transient var microVM: MicroVM?
     @Transient var chatSession: ChatSession?
     
@@ -94,14 +109,25 @@ class Agent {
     }
     
     func play() async {
-        self.isRunning = true
-        await run()
+        if state == .paused {
+            // Resume from paused state
+            await resume()
+        } else {
+            // Start fresh
+            await run()
+        }
+    }
+    
+    func pause() {
+        // Pause execution but keep VM and session alive
+        state = .paused
+        statusMessage = "Paused"
     }
     
     func stop() {
-        // Pause functionality - stops execution and shuts down VM
-        isRunning = false
-        statusMessage = "Paused"
+        // Fully stop - clean up everything
+        state = .stopped
+        statusMessage = "Stopped"
         microVM?.shutdown()
         microVM = nil
         chatSession = nil
@@ -111,7 +137,7 @@ class Agent {
     }
     
     func run() async {
-        isRunning = true
+        state = .running
         
         await MainActor.run {
             self.responses = []
@@ -182,7 +208,7 @@ class Agent {
             }
 
             print("DEBUG: About to get first AI response")
-            guard self.isRunning, let session = self.chatSession else { return }
+            guard self.state.isRunning, let session = self.chatSession else { return }
             
             // Get first command off MainActor to prevent UI blocking
             let firstCommand = try await Task.detached {
@@ -195,7 +221,7 @@ class Agent {
             }
             var command = firstCommand
 
-            while self.isRunning {
+            while self.state.isRunning {
                 try await vm.sendline(command)
                 try await vm.expect("#> ")
                 
@@ -210,14 +236,14 @@ class Agent {
                 try? await Task.sleep(nanoseconds: 500_000_000)
 
                 // Check if still running before calling AI
-                guard self.isRunning, let session = self.chatSession else { break }
+                guard self.state.isRunning, let session = self.chatSession else { break }
 
                 // Get next command off MainActor to prevent blocking
                 let nextCommand = try await Task.detached {
                     try await session.respond(to: shellResult)
                 }.value
                 
-                if (!self.isRunning) {
+                if (!self.state.isRunning) {
                     break
                 }
                 
@@ -226,32 +252,103 @@ class Agent {
                 }
                 command = nextCommand
                 
-                // If exit, then exit
+                // If exit, then stop completely
                 if command.hasPrefix("exit") {
-                    self.isRunning = false
+                    self.stop()
                 }
             }
             
-            vm.shutdown()
-            await MainActor.run {
-                self.statusMessage = "Paused"
+            // If we exited the loop normally (not via exit command), we're paused
+            if state == .running {
+                state = .paused
+                await MainActor.run {
+                    self.statusMessage = "Paused"
+                }
             }
-            chatSession = nil
-            
-            // Clear MLX cache after session completes
-            MLX.GPU.clearCache()
             
         } catch {
             await MainActor.run {
                 self.messages.append(Message(type: .system, content: "Error: \(error.localizedDescription)"))
                 self.statusMessage = "Error: \(error.localizedDescription)"
             }
-            microVM?.shutdown()
-            microVM = nil
-            chatSession = nil
-            MLX.GPU.clearCache()
+            stop()
+        }
+    }
+    
+    func resume() async {
+        state = .running
+        
+        await MainActor.run {
+            self.statusMessage = "Resuming..."
         }
         
-        isRunning = false
+        guard let vm = microVM, let session = chatSession else {
+            await MainActor.run {
+                self.statusMessage = "Cannot resume - VM or session missing"
+            }
+            return
+        }
+        
+        do {
+            await MainActor.run {
+                self.statusMessage = "Running..."
+            }
+            
+            // Continue the loop from where we paused
+            var command = ""
+            
+            while self.state.isRunning {
+                // Check if still running before calling AI
+                guard self.state.isRunning else { break }
+
+                // Get next command off MainActor to prevent blocking
+                let nextCommand = try await Task.detached {
+                    try await session.respond(to: "continue")
+                }.value
+                
+                if (!self.state.isRunning) {
+                    break
+                }
+                
+                await MainActor.run {
+                    self.messages.append(Message(type: .ai, content: nextCommand))
+                }
+                command = nextCommand
+                
+                // If exit, then stop completely
+                if command.hasPrefix("exit") {
+                    self.stop()
+                    break
+                }
+                
+                try await vm.sendline(command)
+                try await vm.expect("#> ")
+                
+                // Get response from the VM
+                let bytes = finalizeShellBytes(vm.before)
+                let shellResult = String(data: bytes, encoding: .utf8)!
+                await MainActor.run {
+                    self.messages.append(Message(type: .vm, content: shellResult))
+                }
+
+                // Sleep for 500ms
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
+            
+            // If we exited the loop normally (not via exit command), we're paused
+            if state == .running {
+                state = .paused
+                await MainActor.run {
+                    self.statusMessage = "Paused"
+                }
+            }
+            
+        } catch {
+            await MainActor.run {
+                self.messages.append(Message(type: .system, content: "Error: \(error.localizedDescription)"))
+                self.statusMessage = "Error: \(error.localizedDescription)"
+            }
+            stop()
+        }
     }
 }

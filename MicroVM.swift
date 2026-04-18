@@ -231,6 +231,8 @@ class MicroVM {
         
         Task {
             do {
+                isRunning = false
+
                 if let container = container {
                     try await container.stop()
                 }
@@ -244,7 +246,6 @@ class MicroVM {
                 bufferUpdateContinuation = nil
                 bufferUpdateStream = nil
                 
-                isRunning = false
                 onStatusUpdate?("MicroVM stopped")
             } catch {
                 onStatusUpdate?("Error stopping MicroVM: \(error)")

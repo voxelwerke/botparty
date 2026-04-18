@@ -21,12 +21,14 @@
 		B57213D02F9090A600FBB20B /* ContainerizationOCI in Frameworks */ = {isa = PBXBuildFile; productRef = B57213CF2F9090A600FBB20B /* ContainerizationOCI */; };
 		B57213D22F9090A600FBB20B /* ContainerizationOS in Frameworks */ = {isa = PBXBuildFile; productRef = B57213D12F9090A600FBB20B /* ContainerizationOS */; };
 		B57213D42F90917200FBB20B /* vmlinux in Resources */ = {isa = PBXBuildFile; fileRef = B57213D32F90917200FBB20B /* vmlinux */; };
+		B57214262F93141800FBB20B /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B57214252F93141800FBB20B /* LICENSE.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B50D8CAE2F9070B700C84285 /* Botparty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Botparty.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B50D8CCC2F907D2E00C84285 /* MicroVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroVM.swift; sourceTree = "<group>"; };
 		B57213D32F90917200FBB20B /* vmlinux */ = {isa = PBXFileReference; lastKnownFileType = file; path = vmlinux; sourceTree = "<group>"; };
+		B57214252F93141800FBB20B /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -63,6 +65,7 @@
 		B50D8CA52F9070B700C84285 = {
 			isa = PBXGroup;
 			children = (
+				B57214252F93141800FBB20B /* LICENSE.txt */,
 				B50D8CB02F9070B700C84285 /* Botparty */,
 				B50D8CCB2F9071E100C84285 /* Frameworks */,
 				B50D8CAF2F9070B700C84285 /* Products */,
@@ -167,6 +170,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B57213D42F90917200FBB20B /* vmlinux in Resources */,
+				B57214262F93141800FBB20B /* LICENSE.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

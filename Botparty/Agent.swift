@@ -176,44 +176,32 @@ class Agent {
             try vm.send("PS1=\"#> \"")
             await vm.flush()
 
-            try await vm.sendline("echo 'Hello from MicroVM'")
-            try await vm.expect("#> ")
-            print("result \(vm.before)")
-
             // Sendline is send + expect
-            try await vm.sendline("uname -a")
+            try await vm.sendline("")
             try await vm.expect("#> ")
-            print("result \(vm.before)")
-            
-            
-            let instructions = self.systemPrompt + "\n"
-            print(instructions)
-            
+                        
             // Create session with generation parameters to prevent infinite loops
-            var generateParams = GenerateParameters()
-            generateParams.maxTokens = 100  // Limit response length
-            generateParams.temperature = 0.7
+//            var generateParams = GenerateParameters()
+//            generateParams.maxTokens = 100  // Limit response length
+//            generateParams.temperature = 0.1
             
-            self.chatSession = ChatSession(container, instructions: instructions, generateParameters: generateParams)
+            self.chatSession = ChatSession(container, instructions: self.systemPrompt)
             
             // Step 4: Run AI tasks
             await MainActor.run {
                 self.statusMessage = "Running..."
             }
 
-            print("DEBUG: About to get first AI response")
             guard self.state.isRunning, let session = self.chatSession else { return }
             
             // Get first command off MainActor to prevent UI blocking
-            let firstCommand = try await Task.detached {
+            var command = try await Task.detached {
                 try await session.respond(to: "The system booted, begin")
             }.value
             
-            print("DEBUG: Got command: \(firstCommand)")
             await MainActor.run {
-                self.messages.append(Message(type: .ai, content: firstCommand))
+                self.messages.append(Message(type: .ai, content: command))
             }
-            var command = firstCommand
 
             while self.state.isRunning {
                 try await vm.sendline(command)

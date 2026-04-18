@@ -116,7 +116,7 @@ class MicroVM {
         
         let stdoutWriter = OutputWriter { [weak self] data in
             guard let self = self, let output = String(data: data, encoding: .utf8) else { return }
-            print("OUTPUT: \(output.debugDescription)")
+//            print("OUTPUT: \(output.debugDescription)")
             
             // Append to internal buffer and notify any waiting expect calls
             self.buffer += output
